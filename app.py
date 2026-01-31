@@ -8,7 +8,7 @@ app = Flask(__name__)
 # Configure Gemini API
 import google.generativeai as genai
 
-GEMINI_API_KEY = 'AIzaSyALWhalgXwwdaiklofqzMlpDioVaQN-3k4'
+GEMINI_API_KEY = 'AIzaSyCQzLvQgVqSBCaITzb3WcYREpriXZFkF8Y'
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.0-flash')
 
@@ -35,33 +35,55 @@ When analyzing pathways, always:
 - Consider student's current performance and confidence
 """
 
-# AI Tutor Persona (for learning conversations)
-AI_TUTOR_PERSONA = """You are "Logic Loom AI Tutor", a friendly and knowledgeable educational assistant for UK students aged 14-18.
+# AI Tutor Persona (for career-aligned learning)
+AI_TUTOR_PERSONA = """You are "Logic Loom AI Tutor", the high-impact career-aligned educational assistant within the Logicloom-pathway platform.
 
-Your role is to:
-1. Help students understand any subject they're studying (GCSE or A-Level)
-2. Explain concepts clearly and appropriately for their age/year level
-3. Use examples and analogies that teenagers can relate to
-4. Break down complex topics into simpler parts
-5. Encourage curiosity and critical thinking
-6. Be patient and supportive
-7. Use UK curriculum context when relevant
+🎯 YOUR CORE MISSION:
+Connect EVERY concept to the student's dream career. You don't just teach math; you build professionals.
 
-Guidelines:
-- Adjust explanation complexity based on the student's year level
-- Year 10-11: GCSE level explanations (ages 14-16)
-- Year 12-13: A-Level explanations (ages 16-18)
-- Use clear, encouraging language
-- Provide step-by-step explanations when appropriate
-- Include practical examples
-- If a topic is very complex, acknowledge it and break it down
-- Never talk down to students, but also don't overwhelm them
+YOUR ENHANCED RESPONSIBILITIES:
+1. Career-Aligned Teaching:
+   - Connect EVERY concept to their career goal (e.g., "This calculus is used in game engines for physics").
+   - Use industry-specific examples (Gaming, AI, Engineering, etc.).
+2. Personalized Learning Path:
+   - Prioritize topics that directly support their career goals.
+   - Use examples from their target industry.
+3. Motivation Through Relevance:
+   - Remind them WHY they're learning this: "Game developers use this daily for..."
+4. Targeted Tutoring:
+   - Focus on their specific tutoring needs and knowlege gaps.
 
-Format your responses:
-- Use clear paragraphs
-- Include examples where helpful
-- Use bullet points for lists or steps
-- Bold key terms or important points using **text**
+VISUAL PRESENTATION REQUIREMENTS:
+1. Formatting & Structure:
+   - Use visual separators and emojis: 📚 Theory, 💡 Key Ideas, 🎮 Career Connection, ✏️ Practice, ✅ Solutions, ⚠️ Mistakes, 🎯 Tips.
+   - Use ASCII art boxes for titles and formulas.
+
+2. Career Goal Banner (Start each topic with this):
+   ═══════════════════════════════════
+   🎯 YOUR GOAL: [Career Goal Here]
+   📚 TODAY'S TOPIC: [Topic Name]
+   ═══════════════════════════════════
+
+3. Why This Matters Block:
+   ┌─────────────────────────────────┐
+   │ [Career Goal] use [Topic] for:  │
+   │ • [Application 1]               │
+   │ • [Application 2]               │
+   └─────────────────────────────────┘
+
+4. Interaction Guidelines:
+   - Friendly, age-appropriate (17-18 years old).
+   - Use [IMAGE: ...] or [DIAGRAM NEEDED: ...] for visual suggestions.
+   - Ask checking questions.
+   - End with: "How will you use this in your future career?"
+
+Example Layout:
+╔══════════════════════════════╗
+║  📚 CONCEPT: Topic Title     ║
+╚══════════════════════════════╝
+┌─────────────────┐
+│ formula here    │
+└─────────────────┘
 """
 
 # Load subject and career data
@@ -247,6 +269,7 @@ def tutor():
         question = data.get('question', '')
         year_level = data.get('year_level', '')
         chat_history = data.get('chat_history', [])
+        image_data = data.get('image', None)  # Base64 encoded image
         
         if not question:
             return jsonify({'error': 'No question provided'}), 400
@@ -274,24 +297,117 @@ def tutor():
             }
             year_context = f"\n\nStudent context: {year_level} ({age_map.get(year_level, 'secondary school student')})"
         
-        prompt = f"""{AI_TUTOR_PERSONA}{year_context}{history_context}
+        student_profile = data.get('student_profile', {})
+        student_name = student_profile.get('name', 'Student')
+        
+        # Extended Profile Data
+        career_goal = student_profile.get('career_goal', 'Not specified')
+        career_interests = ", ".join(student_profile.get('career_interests', []))
+        reason_for_subject = student_profile.get('reason_for_subject', 'Not specified')
+        tutoring_needs = ", ".join(student_profile.get('tutoring_needs', []))
+        strengths = ", ".join(student_profile.get('strengths', []))
+        improvement_areas = ", ".join(student_profile.get('areas_to_improve', []))
+        interests = ", ".join(student_profile.get('likes', student_profile.get('interests', [])))
+        
+        personalization = f"""
+RETRIEVED STUDENT PROFILE:
+- Name: {student_name}
+- Year Level: {year_level}
+- Interests: {interests}
 
-Student's question: {question}
+🎯 CAREER & GOALS:
+- Career Goal: {career_goal}
+- Career Interests: {career_interests}
+- Relevance of Math: {reason_for_subject}
+- Tutoring Needs: {tutoring_needs}
+- Strengths: {strengths}
+- Areas to Improve: {improvement_areas}
+"""
+            
+        prompt = f"{AI_TUTOR_PERSONA}{year_context}{personalization}{history_context}" \
+                 f"\n\nStudent's question: {question}\n\nRemember to ALWAYS start by connecting the topic to their career goal and follow all visual requirements."
 
-Please provide a clear, helpful answer tailored to the student's level. Keep your response conversational and engaging."""
 
-        # Call Gemini
-        response = model.generate_content(
-            prompt,
-            generation_config={
-                'temperature': 0.7,
-                'max_output_tokens': 1500,
-            }
-        )
+
+
+
+        # Handle multimodal request (text + image/document)
+        if image_data:
+            import PIL.Image
+            import io
+            import base64
+            
+            file_type = data.get('file_type', 'image')
+            
+            try:
+                # Remove data URL prefix if present
+                if ',' in image_data:
+                    image_data = image_data.split(',')[1]
+                
+                file_bytes = base64.b64decode(image_data)
+                
+                if file_type == 'image':
+                    image = PIL.Image.open(io.BytesIO(file_bytes))
+                    # Call Gemini with image
+                    response = model.generate_content(
+                        [prompt, image],
+                        generation_config={
+                            'temperature': 0.7,
+                            'max_output_tokens': 2000,
+                        }
+                    )
+                elif file_type == 'pdf':
+                    import pypdf
+                    pdf_reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+                    text = ""
+                    for page in pdf_reader.pages:
+                        text += page.extract_text() or ""
+                    
+                    full_prompt = f"{prompt}\n\n[CONTEXT FROM UPLOADED PDF]:\n{text}"
+                    response = model.generate_content(
+                        full_prompt,
+                        generation_config={
+                            'temperature': 0.7,
+                            'max_output_tokens': 2000,
+                        }
+                    )
+                elif file_type in ['docx', 'doc']:
+                    import docx
+                    doc = docx.Document(io.BytesIO(file_bytes))
+                    text = "\n".join([para.text for para in doc.paragraphs])
+                    
+                    full_prompt = f"{prompt}\n\n[CONTEXT FROM UPLOADED WORD DOC]:\n{text}"
+                    response = model.generate_content(
+                        full_prompt,
+                        generation_config={
+                            'temperature': 0.7,
+                            'max_output_tokens': 2000,
+                        }
+                    )
+                else:
+                    return jsonify({'error': f'Unsupported file type: {file_type}'}), 400
+                    
+            except Exception as file_error:
+                print(f"Error processing file: {str(file_error)}")
+                import traceback
+                traceback.print_exc()
+                return jsonify({'error': f'Failed to process file: {str(file_error)}'}), 400
+        else:
+            # Text-only request
+            response = model.generate_content(
+                prompt,
+                generation_config={
+                    'temperature': 0.7,
+                    'max_output_tokens': 1500,
+                }
+            )
         
         return jsonify({'response': response.text})
         
     except Exception as e:
+        print(f"Error in /tutor endpoint: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

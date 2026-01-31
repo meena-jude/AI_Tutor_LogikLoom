@@ -443,18 +443,48 @@
             padding: 15px;
             border-radius: 12px;
             line-height: 1.6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .message-user .message-content {
             background: linear-gradient(135deg, #7eb77e 0%, #9bc99b 100%);
             color: white;
             margin-left: auto;
+            box-shadow: 0 4px 12px rgba(126, 183, 126, 0.3);
         }
 
         .message-tutor .message-content {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border: 2px solid #e0ede0;
             color: #333;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            white-space: pre-wrap;
+            /* Essential for ASCII art */
+        }
+
+        .message-tutor .message-content pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin: 10px 0;
+            overflow-x: auto;
+            border-left: 4px solid #7eb77e;
+        }
+
+        /* ASCII Art Box Styling */
+        .ascii-box {
+            font-family: 'Consolas', 'Courier New', monospace;
+            white-space: pre;
+            display: block;
+            margin: 10px 0;
+            color: #2c3e50;
+            line-height: 1.2;
+            font-size: 0.95rem;
         }
 
         .message-user {
@@ -554,6 +584,11 @@
 
             <form id="profileForm">
                 <div class="form-group">
+                    <label for="studentName">Full Name *</label>
+                    <input type="text" id="studentName" placeholder="e.g., Alex Thompson" required>
+                </div>
+
+                <div class="form-group">
                     <label for="currentYear">Current Year *</label>
                     <select id="currentYear" required>
                         <option value="">Select your year...</option>
@@ -576,6 +611,47 @@
                     </select>
                     <small style="color: #666;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</small>
                 </div>
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+                <h3 style="color: #5d9c5d; margin-bottom: 20px;">🎯 Career & Goals</h3>
+
+                <div class="form-group">
+                    <label for="extCareerGoal">Dream Career Goal *</label>
+                    <input type="text" id="extCareerGoal" placeholder="e.g., Game Developer / Software Engineer"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="subjectFocus">Subject Focus</label>
+                    <input type="text" id="subjectFocus" placeholder="e.g., Mathematics" value="Mathematics">
+                </div>
+
+                <div class="form-group">
+                    <label for="reasonForSubject">Why are you studying this subject?</label>
+                    <textarea id="reasonForSubject" rows="2"
+                        placeholder="e.g., Need strong math for coding algorithms and game physics"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="tutoringNeeds">Specific Tutoring Needs (one per line)</label>
+                    <textarea id="tutoringNeeds" rows="3"
+                        placeholder="e.g., Calculus for game physics&#10;Statistics for AI/ML"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label for="strengths">Your Strengths</label>
+                            <input type="text" id="strengths" placeholder="e.g., Problem-solving">
+                        </div>
+                        <div>
+                            <label for="areasToImprove">Areas to Improve</label>
+                            <input type="text" id="areasToImprove" placeholder="e.g., Complex equations">
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
 
                 <div class="form-group">
                     <label>Current Subjects & Grades *</label>
@@ -637,7 +713,7 @@
         <div id="tutorPage" class="page">
             <h2>🤖 AI Tutor - Let's Learn Together!</h2>
             <p style="color: #666; margin-bottom: 25px;">Ask me anything about any subject. I'm here to help you learn
-                and understand.</p>
+                and understand. You can also upload images!</p>
 
             <div class="form-group">
                 <label for="tutorYear">Your Current Year (Optional - helps me tailor explanations)</label>
@@ -655,13 +731,40 @@
             </div>
 
             <div class="chat-input-container">
+                <!-- File Preview Area -->
+                <div id="imagePreview"
+                    style="display: none; margin-bottom: 15px; position: relative; background: #f8f9fa; padding: 10px; border-radius: 12px; border: 2px dashed #7eb77e;">
+                    <div id="previewContent" style="display: flex; align-items: center; gap: 12px;">
+                        <img id="previewImg"
+                            style="max-width: 100px; max-height: 100px; border-radius: 8px; display: none;">
+                        <div id="fileIcon" style="font-size: 2.5rem; display: none;">📄</div>
+                        <div id="fileInfo" style="flex: 1;">
+                            <div id="fileName" style="font-weight: 600; color: #333; font-size: 0.9rem;"></div>
+                            <div id="fileSize" style="color: #666; font-size: 0.8rem;"></div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="clearImage()"
+                        style="position: absolute; top: -10px; right: -10px; background: #ff4444; color: white; border: none; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">×</button>
+                </div>
+
                 <textarea id="tutorQuestion" class="chat-input"
                     placeholder="Ask your question here... (e.g., 'Explain photosynthesis', 'How do I solve quadratic equations?', 'What is the French Revolution?')"
                     rows="3"></textarea>
-                <div class="button-group">
+
+                <div class="button-group" style="display: flex; gap: 10px; align-items: center;">
                     <button type="button" class="btn btn-secondary" onclick="showPage('landingPage')">← Back to
                         Home</button>
-                    <button type="button" class="btn btn-primary" onclick="askTutor()">Ask Question 💬</button>
+
+                    <!-- File Upload Button -->
+                    <label for="imageUpload" class="btn"
+                        style="background: linear-gradient(135deg, #9bc99b 0%, #7eb77e 100%); color: white; cursor: pointer; margin: 0; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem;">
+                        📎 Attach File
+                        <input type="file" id="imageUpload" accept="image/*,.pdf,.doc,.docx,.txt" style="display: none;"
+                            onchange="handleImageUpload(event)">
+                    </label>
+
+                    <button type="button" class="btn btn-primary" onclick="askTutor()" style="flex: 1;">Ask Question
+                        💬</button>
                 </div>
             </div>
         </div>
@@ -833,9 +936,16 @@
             }
 
             studentProfile = {
+                name: document.getElementById('studentName').value,
                 current_year: document.getElementById('currentYear').value,
                 interests: Array.from(document.getElementById('interests').selectedOptions).map(o => o.value),
-                current_subjects: subjects
+                current_subjects: subjects,
+                career_goal: document.getElementById('extCareerGoal').value,
+                subject_focus: document.getElementById('subjectFocus').value,
+                reason_for_subject: document.getElementById('reasonForSubject').value,
+                tutoring_needs: document.getElementById('tutoringNeeds').value.split('\n').filter(l => l.trim()),
+                strengths: document.getElementById('strengths').value.split(',').map(s => s.trim()).filter(s => s),
+                areas_to_improve: document.getElementById('areasToImprove').value.split(',').map(s => s.trim()).filter(s => s)
             };
 
             if (flowType === 'career') {
@@ -1128,17 +1238,91 @@
 
         // AI Tutor Functions
         let chatHistory = [];
+        let uploadedFile = null;
+        let uploadedFileType = null;
+        let uploadedFileName = null;
 
         function initializeChat() {
             const chatMessages = document.getElementById('chatMessages');
+            const studentName = document.getElementById('studentName')?.value || 'Goku';
+
             chatMessages.innerHTML = `
                 <div class="chat-welcome">
-                    <h3>👋 Welcome to Your AI Tutor!</h3>
-                    <p>I'm here to help you learn and understand any subject better.</p>
-                    <p>Feel free to ask me questions about Math, Science, History, Languages, or any other subject you're studying!</p>
+                    <h3>Hello ${studentName}, how can I help?</h3>
                 </div>
             `;
             chatHistory = [];
+            uploadedFile = null;
+            uploadedFileType = null;
+            uploadedFileName = null;
+        }
+
+        // File upload handling
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Check file size (max 5MB for images, 10MB for docs)
+            const isImage = file.type.startsWith('image/');
+            const maxSize = isImage ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+
+            if (file.size > maxSize) {
+                alert(`File size must be less than ${isImage ? '5MB' : '10MB'}`);
+                return;
+            }
+
+            // Detect file type
+            let type = 'other';
+            let icon = '📄';
+
+            if (isImage) {
+                type = 'image';
+            } else if (file.type === 'application/pdf') {
+                type = 'pdf';
+                icon = '📕';
+            } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+                type = 'docx';
+                icon = '📘';
+            } else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+                type = 'text';
+                icon = '📝';
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                uploadedFile = e.target.result;
+                uploadedFileType = type;
+                uploadedFileName = file.name;
+
+                const previewImg = document.getElementById('previewImg');
+                const fileIcon = document.getElementById('fileIcon');
+                const fileName = document.getElementById('fileName');
+                const fileSize = document.getElementById('fileSize');
+
+                fileName.textContent = file.name;
+                fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+
+                if (type === 'image') {
+                    previewImg.src = uploadedFile;
+                    previewImg.style.display = 'block';
+                    fileIcon.style.display = 'none';
+                } else {
+                    previewImg.style.display = 'none';
+                    fileIcon.textContent = icon;
+                    fileIcon.style.display = 'block';
+                }
+
+                document.getElementById('imagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage() {
+            uploadedFile = null;
+            uploadedFileType = null;
+            uploadedFileName = null;
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('imageUpload').value = '';
         }
 
         async function askTutor() {
@@ -1146,31 +1330,59 @@
             const question = questionInput.value.trim();
             const yearLevel = document.getElementById('tutorYear').value;
 
-            if (!question) {
-                alert('Please enter a question!');
+            if (!question && !uploadedFile) {
+                alert('Please enter a question or attach a file!');
                 return;
             }
 
-            // Add user message to chat
-            addMessageToChat('user', question);
+            // Add user message to chat (with file info if uploaded)
+            addMessageToChat('user', question || `Please analyze this ${uploadedFileType} file.`, uploadedFile, uploadedFileType, uploadedFileName);
             questionInput.value = '';
 
             // Show thinking indicator
             const thinkingId = addThinkingIndicator();
 
             try {
+                // Get profile for personalization
+                const profile = {
+                    name: studentProfile.name || document.getElementById('studentName')?.value || 'Goku',
+                    career_goal: studentProfile.career_goal || document.getElementById('extCareerGoal')?.value || 'Game Developer',
+                    career_interests: studentProfile.interests || [],
+                    subject_focus: studentProfile.subject_focus || 'Mathematics',
+                    reason_for_subject: studentProfile.reason_for_subject || 'Need math for game physics',
+                    tutoring_needs: studentProfile.tutoring_needs || ['Calculus for game physics'],
+                    strengths: studentProfile.strengths || ['Problem-solving'],
+                    areas_to_improve: studentProfile.areas_to_improve || ['Complex equations'],
+                    likes: studentProfile.interests || []
+                };
+
+                const requestBody = {
+                    question: question || `Please analyze the attached ${uploadedFileType} file.`,
+                    year_level: yearLevel,
+                    chat_history: chatHistory,
+                    student_profile: profile
+                };
+
+                // Add file if uploaded
+                if (uploadedFile) {
+                    requestBody.image = uploadedFile;
+                    requestBody.file_type = uploadedFileType;
+                }
+
                 const response = await fetch('/tutor', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        question: question,
-                        year_level: yearLevel,
-                        chat_history: chatHistory
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
+                // Clear uploaded file after sending
+                if (uploadedFile) {
+                    clearImage();
+                }
+
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorJson = await response.json();
+                    throw new Error(errorJson.error || `HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -1182,7 +1394,8 @@
                     addMessageToChat('tutor', `Sorry, I encountered an error: ${data.error}`);
                 } else {
                     const answer = data.response || data.answer || 'I apologize, but I couldn\'t generate a response.';
-                    addMessageToChat('tutor', answer);
+                    // Add typing animation effect
+                    addMessageWithTypingEffect('tutor', answer);
 
                     // Update chat history
                     chatHistory.push({ role: 'user', content: question });
@@ -1195,28 +1408,156 @@
             }
         }
 
-        function addMessageToChat(sender, content) {
+        function addMessageToChat(sender, content, fileData = null, fileType = null, fileName = null) {
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message message-${sender}`;
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transform = 'translateY(10px)';
 
             const avatar = sender === 'user' ? '👤' : '🤖';
 
+            let attachmentHtml = '';
+            if (fileData) {
+                if (fileType === 'image') {
+                    attachmentHtml = `<img src="${fileData}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-top: 8px; display: block; border: 1px solid rgba(255,255,255,0.3);">`;
+                } else {
+                    const icon = fileType === 'pdf' ? '📕' : (fileType === 'docx' ? '📘' : '📄');
+                    attachmentHtml = `
+                        <div style="background: rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; margin-top: 8px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                            <span style="font-size: 1.5rem;">${icon}</span>
+                            <span style="font-size: 0.85rem; font-weight: 500;">${fileName || 'Document'}</span>
+                        </div>
+                    `;
+                }
+            }
+
             messageDiv.innerHTML = `
                 <div class="message-avatar">${avatar}</div>
-                <div class="message-content">${formatChatMessage(content)}</div>
+                <div class="message-content">
+                    ${formatChatMessage(content)}
+                    ${attachmentHtml}
+                </div>
             `;
 
             chatMessages.appendChild(messageDiv);
+
+            // Fade in animation
+            setTimeout(() => {
+                messageDiv.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                messageDiv.style.opacity = '1';
+                messageDiv.style.transform = 'translateY(0)';
+            }, 10);
+
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
+        // Typing animation effect for AI responses
+        function addMessageWithTypingEffect(sender, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message message-${sender}`;
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transform = 'translateY(10px)';
+
+            const avatar = '🤖';
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+            `;
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+
+            // Fade in
+            setTimeout(() => {
+                messageDiv.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                messageDiv.style.opacity = '1';
+                messageDiv.style.transform = 'translateY(0)';
+            }, 10);
+
+            // Typing effect
+            let index = 0;
+            const formattedContent = formatChatMessage(content);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = formattedContent;
+            const textContent = tempDiv.textContent || tempDiv.innerText;
+
+            function typeCharacter() {
+                if (index < textContent.length) {
+                    // For simplicity, show full formatted content after a delay
+                    // A more sophisticated approach would type character by character
+                    contentDiv.innerHTML = formattedContent;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } else {
+                    contentDiv.innerHTML = formattedContent;
+                }
+            }
+
+            // Show content with a slight delay for effect
+            setTimeout(() => {
+                contentDiv.innerHTML = formattedContent;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 300);
+        }
+
         function formatChatMessage(text) {
+            if (!text) return '';
+
+            // Detect ASCII Art/Boxes by checking for specific characters: ╔ ╗ ╚ ╝ ║ ═ ┌ ┐ └ ┘ │ ─
+            const asciiChars = /[╔╗╚╝║═┌┐└┘│─]/;
+            if (asciiChars.test(text)) {
+                // Wrap content in a monospace span if it contains box-drawing characters
+                // but only the parts that are boxes
+                const lines = text.split('\n');
+                let inAsciiBlock = false;
+                let formattedHtml = '';
+
+                lines.forEach(line => {
+                    if (asciiChars.test(line)) {
+                        if (!inAsciiBlock) {
+                            formattedHtml += '<span class="ascii-box">';
+                            inAsciiBlock = true;
+                        }
+                        formattedHtml += line + '\n';
+                    } else {
+                        if (inAsciiBlock) {
+                            formattedHtml += '</span>';
+                            inAsciiBlock = false;
+                        }
+                        formattedHtml += formatMarkdownLine(line) + '<br>';
+                    }
+                });
+
+                if (inAsciiBlock) formattedHtml += '</span>';
+                return formattedHtml;
+            }
+
+            return formatMarkdownLine(text).replace(/\n/g, '<br>');
+        }
+
+        function formatMarkdownLine(text) {
             // Convert markdown-style bold
             text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-            // Convert line breaks to <br>
-            text = text.replace(/\n/g, '<br>');
+            // Convert markdown-style italic
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // Detect and highlight code blocks with ```
+            text = text.replace(/```([\s\S]*?)```/g, function (match, code) {
+                return `<pre><code>${code.trim()}</code></pre>`;
+            });
+
+            // Detect and highlight inline code with `
+            text = text.replace(/`([^`]+)`/g, '<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #d63384;">$1</code>');
+
+            // Detect math expressions
+            text = text.replace(/\$\$([^$]+)\$\$/g, '<span style="font-style: italic; color: #5d9c5d; background: #f0f8f0; padding: 4px 8px; border-radius: 4px; display: inline-block; margin: 4px 0;">$1</span>');
+            text = text.replace(/\$([^$]+)\$/g, '<span style="font-style: italic; color: #5d9c5d;">$1</span>');
+
+            // Convert bullet points
+            text = text.replace(/^[\-\*]\s+(.+)$/gm, '<li style="margin-left: 20px;">$1</li>');
 
             return text;
         }
